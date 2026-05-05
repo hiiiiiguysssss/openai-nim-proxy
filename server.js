@@ -8,8 +8,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '500mb'}));
-app.use(express.urlencoded({ limit: '500mb', extended: true}));
+app.use(express.json());
 
 // NVIDIA NIM API configuration
 const NIM_API_BASE = process.env.NIM_API_BASE || 'https://integrate.api.nvidia.com/v1';
@@ -26,11 +25,10 @@ const MODEL_MAPPING = {
   'gpt-3.5-turbo': 'nvidia/llama-3.1-nemotron-ultra-253b-v1',
   'gpt-4': 'qwen/qwen3-coder-480b-a35b-instruct',
   'gpt-4-turbo': 'moonshotai/kimi-k2-instruct-0905',
-  'gpt-4o': 'deepseek-ai/deepseek-v3.2',
+  'gpt-4o': 'deepseek-ai/deepseek-v3.1',
   'claude-3-opus': 'openai/gpt-oss-120b',
   'claude-3-sonnet': 'openai/gpt-oss-20b',
-  'gemini-pro': 'qwen/qwen3-next-80b-a3b-thinking',
-  'gpt-5': 'deepseek-ai/deepseek-v3.2'
+  'gemini-pro': 'qwen/qwen3-next-80b-a3b-thinking' 
 };
 
 // Health check endpoint
@@ -104,16 +102,13 @@ app.post('/v1/chat/completions', async (req, res) => {
     };
     
     // Make request to NVIDIA NIM API
-const response = await axios.post(`${NIM_API_BASE}/chat/completions`, nimRequest, {
-  headers: {
-    'Authorization': `Bearer ${NIM_API_KEY}`,
-    'Content-Type': 'application/json'
-  },
-  responseType: stream ? 'stream' : 'json',
-  maxBodyLength: Infinity,
-  maxContentLength: Infinity
-});
-
+    const response = await axios.post(`${NIM_API_BASE}/chat/completions`, nimRequest, {
+      headers: {
+        'Authorization': `Bearer ${NIM_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      responseType: stream ? 'stream' : 'json'
+    });
     
     if (stream) {
       // Handle streaming response with reasoning
@@ -126,13 +121,13 @@ const response = await axios.post(`${NIM_API_BASE}/chat/completions`, nimRequest
       
       response.data.on('data', (chunk) => {
         buffer += chunk.toString();
-        const lines = buffer.split('\\n');
+        const lines = buffer.split('\n');
         buffer = lines.pop() || '';
         
         lines.forEach(line => {
           if (line.startsWith('data: ')) {
             if (line.includes('[DONE]')) {
-              res.write(line + '\\n');
+              res.write(line + '\n');
               return;
             }
             
@@ -146,14 +141,14 @@ const response = await axios.post(`${NIM_API_BASE}/chat/completions`, nimRequest
                   let combinedContent = '';
                   
                   if (reasoning && !reasoningStarted) {
-                    combinedContent = '<think>\\n' + reasoning;
+                    combinedContent = '<think>\n' + reasoning;
                     reasoningStarted = true;
                   } else if (reasoning) {
                     combinedContent = reasoning;
                   }
                   
                   if (content && reasoningStarted) {
-                    combinedContent += '</think>\\n\\n' + content;
+                    combinedContent += '</think>\n\n' + content;
                     reasoningStarted = false;
                   } else if (content) {
                     combinedContent += content;
@@ -172,9 +167,9 @@ const response = await axios.post(`${NIM_API_BASE}/chat/completions`, nimRequest
                   delete data.choices[0].delta.reasoning_content;
                 }
               }
-              res.write(`data: ${JSON.stringify(data)}\\n\\n`);
+              res.write(`data: ${JSON.stringify(data)}\n\n`);
             } catch (e) {
-              res.write(line + '\\n');
+              res.write(line + '\n');
             }
           }
         });
@@ -196,7 +191,7 @@ const response = await axios.post(`${NIM_API_BASE}/chat/completions`, nimRequest
           let fullContent = choice.message?.content || '';
           
           if (SHOW_REASONING && choice.message?.reasoning_content) {
-            fullContent = '<think>\\n' + choice.message.reasoning_content + '\\n</think>\\n\\n' + fullContent;
+            fullContent = '<think>\n' + choice.message.reasoning_content + '\n</think>\n\n' + fullContent;
           }
           
           return {
@@ -242,14 +237,9 @@ app.all('*', (req, res) => {
   });
 });
 
-if (process.env.NODE_ENV !== 'production') {
-
 app.listen(PORT, () => {
-
-console.log(`Proxy running on port ${PORT}`);
-
+  console.log(`OpenAI to NVIDIA NIM Proxy running on port ${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`Reasoning display: ${SHOW_REASONING ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`Thinking mode: ${ENABLE_THINKING_MODE ? 'ENABLED' : 'DISABLED'}`);
 });
-
-}
-
-module.exports = app;
