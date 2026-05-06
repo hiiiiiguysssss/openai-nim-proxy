@@ -28,7 +28,7 @@ const MODEL_MAPPING = {
   'gpt-4o': 'minimaxai/minimax-m2.7',
   'claude-3-opus': 'openai/gpt-oss-120b',
   'claude-3-sonnet': 'openai/gpt-oss-20b',
-  'gemini-pro': 'meta/llama-4-scout-17b-16e-instruct' 
+  'gemini-pro': 'openai/gpt-oss-120b' 
 };
 
 // Health check endpoint
