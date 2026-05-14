@@ -9,26 +9,6 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use((req, res, next) => {
-  // Allow unauthenticated endpoints
-  if (req.path === '/health' || req.path === '/v1/models') {
-    return next();
-  }
-
-  const auth = req.headers.authorization?.trim();
-
-  if (!auth || auth.localeCompare(`Bearer ${process.env.CLIENT_AUTH_KEY}`) !== 0) {
-    return res.status(403).json({
-      error: {
-        message: 'Forbidden',
-        type: 'authentication_error',
-        code: 403
-      }
-    });
-  }
-
-  next();
-});
 
 const NIM_API_BASE = process.env.NIM_API_BASE || 'https://integrate.api.nvidia.com/v1';
 const NIM_API_KEY = process.env.NIM_API_KEY;
