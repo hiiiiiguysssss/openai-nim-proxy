@@ -39,7 +39,8 @@ const MODEL_MAPPING = {
   'm2.7': 'minimaxai/minimax-m2.7',
   'step-3.5-flash': 'stepfun-ai/step-3.5-flash',
   'gemini-flash': 'google/gemma-4-27b-it',
-  'deepseek-r1': 'deepseek-ai/deepseek-r1-0528'
+  'deepseek-r1': 'deepseek-ai/deepseek-r1-0528',
+  'gpt-o1': 'deepseek-ai/deepseek-r1'
 };
 
 // Fallback chain
