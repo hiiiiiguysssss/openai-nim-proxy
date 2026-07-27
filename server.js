@@ -22,13 +22,19 @@ const ENABLE_THINKING_MODE = false; // Set to true to enable chat_template_kwarg
 
 // Model mapping (adjust based on available NIM models)
 const MODEL_MAPPING = {
-  'gpt-3.5-turbo': 'nvidia/llama-3.1-nemotron-ultra-253b-v1',
-  'gpt-4': 'qwen/qwen3-coder-480b-a35b-instruct',
-  'gpt-4-turbo': 'moonshotai/kimi-k2-instruct-0905',
-  'gpt-4o': 'deepseek-ai/deepseek-v3.1',
-  'claude-3-opus': 'openai/gpt-oss-120b',
-  'claude-3-sonnet': 'openai/gpt-oss-20b',
-  'gemini-pro': 'qwen/qwen3-next-80b-a3b-thinking' 
+  'm2.7' : 'minimaxai/minimax-m2.7',
+  'mistral-large' : 'mistralai/mistral-large-3-675b-instruct-2512',
+  'mistral-medium' : 'mistralai/mistral-medium-3.5-128b',
+  'gpt-oss-120b' : 'openai/gpt-oss-120b'
+  'step-3.5-flash' : 'stepfun-ai/step-3.5-flash',
+  'maverick' : 'meta/llama-4-maverick-17b-128e-instruct',
+  'mistral-small' : 'mistralai/mistral-small-4-119b-2603',
+  'gemma-4-27b' : 'google/gemma-4-27b-it',
+  'gemma-4-31b' : 'google/gemma-4-31b-it',
+  'llama-3.3' : 'meta/llama-3.3-70b-instruct',
+  'gpt-oss-20b' : 'openai/gpt-oss-20b',
+  'nemotron-mini' : 'nvidia/nemotron-mini-4b-instruct',
+  'gemma-2' : 'google/gemma-2-2b-it'
 };
 
 // Health check endpoint
