@@ -22,28 +22,13 @@ const ENABLE_THINKING_MODE = false; // Set to true to enable chat_template_kwarg
 
 // Model mapping (adjust based on available NIM models)
 const MODEL_MAPPING = {
-  'gpt-3.5-turbo': 'nvidia/nemotron-3-super-120b-a12b',
+  'gpt-3.5-turbo': 'minimaxai/minimax-m2.7-highspeed',
   'gpt-4': 'qwen/qwen3-coder-480b-a35b-instruct',
-  'gpt-3.5': 'qwen/qwen3.5-397b-a17b',
-  'gpt-4-turbo': 'moonshotai/kimi-k2.6',
-  'gpt-4o': 'deepseek-ai/deepseek-v4-pro',
+  'gpt-4-turbo': 'moonshotai/kimi-k2-instruct-0905',
+  'gpt-4o': 'minimaxai/minimax-m2.7',
   'claude-3-opus': 'openai/gpt-oss-120b',
   'claude-3-sonnet': 'openai/gpt-oss-20b',
-  'gemini-pro': 'nvidia/llama-3.3-nemotron-super-49b-v1.5',
-  'gpt-4-flash': 'deepseek-ai/deepseek-v4-flash',
-  'glm-5.1': 'z-ai/glm-5.1',
-  'mistral': 'mistralai/mistral-large-3-675b-instruct-2512',
-  'mistral-turbo': 'mistralai/mistral-medium-3.5-128b',
-  'mistral-pro': 'mistralai/mistral-small-4-119b-2603',
-  'mistral-nemo': 'mistralai/mistral-nemotron',
-  'google-light': 'google/gemma-4-31b-it',
-  'google-lightest': 'google/gemma-2-2b-it',
-  'google-lighter': 'google/gemma-3n-e4b-it',
-  'm2.7': 'minimaxai/minimax-m2.7',
-  'step-3.5-flash': 'stepfun-ai/step-3.5-flash',
-  'gemini-flash': 'google/gemma-4-27b-it',
-  'deepseek-r1': 'deepseek-ai/deepseek-r1-0528',
-  'gpt-o1': 'deepseek-ai/deepseek-r1'
+  'gemini-pro': 'openai/gpt-oss-120b'
 };
 
 // Format response into paragraphs
@@ -115,14 +100,7 @@ app.post('/v1/chat/completions', async (req, res) => {
       } catch (e) {}
       
       if (!nimModel) {
-        const modelLower = model.toLowerCase();
-        if (modelLower.includes('gpt-4') || modelLower.includes('claude-opus') || modelLower.includes('405b')) {
-          nimModel = 'meta/llama-3.1-405b-instruct';
-        } else if (modelLower.includes('claude') || modelLower.includes('gemini') || modelLower.includes('70b')) {
-          nimModel = 'meta/llama-3.1-70b-instruct';
-        } else {
-          nimModel = 'meta/llama-3.1-8b-instruct';
-        }
+        nimModel = 'mistralai/mistral-small-4-119b-2603'; // safe working fallback
       }
     }
     
@@ -242,6 +220,8 @@ Adapt seamlessly across genres and tones, maintaining character integrity and ad
           if (SHOW_REASONING && choice.message?.reasoning_content) {
             fullContent = '<think>\n' + choice.message.reasoning_content + '\n</think>\n\n' + fullContent;
           }
+
+          fullContent = formatParagraphs(fullContent);
           
           return {
             index: choice.index,
