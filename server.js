@@ -25,7 +25,7 @@ const MODEL_MAPPING = {
   'm2.7' : 'minimaxai/minimax-m2.7',
   'mistral-large' : 'mistralai/mistral-large-3-675b-instruct-2512',
   'mistral-medium' : 'mistralai/mistral-medium-3.5-128b',
-  'gpt-oss-120b' : 'openai/gpt-oss-120b'
+  'gpt-oss-120b' : 'openai/gpt-oss-120b',
   'step-3.5-flash' : 'stepfun-ai/step-3.5-flash',
   'maverick' : 'meta/llama-4-maverick-17b-128e-instruct',
   'mistral-small' : 'mistralai/mistral-small-4-119b-2603',
