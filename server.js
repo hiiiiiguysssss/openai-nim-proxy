@@ -348,12 +348,11 @@ app.post('/v1/chat/completions', async (req, res) => {
 
             if (SHOW_REASONING) {
               if (reasoning && !reasoningOpen) {
-                content = `<thinking>\n${reasoning.replace(/\n/g, '\\n')}`;
+                content = `<thinking>\n${reasoning}`;
                 reasoningOpen = true;
               } else if (reasoning) {
-                content = reasoning.replace(/\n/g, '\\n');
+                content = reasoning;
               }
-
               if (delta.content && reasoningOpen) {
                 content += `\n</thinking>\n\n${delta.content}`;
                 reasoningOpen = false;
@@ -467,8 +466,7 @@ app.post('/v1/chat/completions', async (req, res) => {
           let content = choice.message?.content || '';
 
           if (SHOW_REASONING && choice.message?.reasoning_content) {
-            const safeReasoning = choice.message.reasoning_content.replace(/\n/g, '\\n');
-            content = `<thinking>\n${safeReasoning}\n</thinking>\n\n${content}`;
+            content = `<thinking>\n${choice.message.reasoning_content}\n</thinking>\n\n${content}`;
           }
 
           return {
