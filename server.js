@@ -121,64 +121,64 @@ app.post('/v1/chat/completions', async (req, res) => {
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
-      
+
       let buffer = '';
+      let fullText = '';
+      let lastData = null;
       let reasoningStarted = false;
-      
+
       response.data.on('data', (chunk) => {
         buffer += chunk.toString();
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
-        
+
         lines.forEach(line => {
-          if (line.startsWith('data: ')) {
-            if (line.includes('[DONE]')) {
-              res.write(line + '\n');
-              return;
-            }
-            
-            try {
-              const data = JSON.parse(line.slice(6));
-              if (data.choices?.[0]?.delta) {
-                const reasoning = data.choices[0].delta.reasoning_content;
-                const content = data.choices[0].delta.content;
-                
-                if (SHOW_REASONING) {
-                  let combinedContent = '';
-                  
-                  if (reasoning && !reasoningStarted) {
-                    combinedContent = '<think>\n' + reasoning;
-                    reasoningStarted = true;
-                  } else if (reasoning) {
-                    combinedContent = reasoning;
-                  }
-                  
-                  if (content && reasoningStarted) {
-                    combinedContent += '</think>\n\n' + content;
-                    reasoningStarted = false;
-                  } else if (content) {
-                    combinedContent += content;
-                  }
-                  
-                  if (combinedContent) {
-                    data.choices[0].delta.content = combinedContent;
-                    delete data.choices[0].delta.reasoning_content;
-                  }
-                } else {
-                  if (content) {
-                    data.choices[0].delta.content = content;
-                  } else {
-                    data.choices[0].delta.content = '';
-                  }
-                  delete data.choices[0].delta.reasoning_content;
+          if (!line.startsWith('data: ')) return;
+          if (line.includes('[DONE]')) return;
+
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.choices?.[0]?.delta) {
+              const reasoning = data.choices[0].delta.reasoning_content;
+              const content = data.choices[0].delta.content;
+
+              if (SHOW_REASONING) {
+                let combinedContent = '';
+                if (reasoning && !reasoningStarted) {
+                  combinedContent = '<think>\n' + reasoning;
+                  reasoningStarted = true;
+                } else if (reasoning) {
+                  combinedContent = reasoning;
                 }
+                if (content && reasoningStarted) {
+                  combinedContent += '</think>\n\n' + content;
+                  reasoningStarted = false;
+                } else if (content) {
+                  combinedContent += content;
+                }
+                if (combinedContent) fullText += combinedContent;
+              } else {
+                if (content) fullText += content;
+                delete data.choices[0].delta.reasoning_content;
               }
-              res.write(`data: ${JSON.stringify(data)}\n\n`);
-            } catch (e) {
-              res.write(line + '\n');
+              lastData = data;
             }
-          }
+          } catch (e) {}
         });
+      });
+
+      response.data.on('end', () => {
+        if (lastData && fullText) {
+          const formatted = formatParagraphs(fullText);
+          const chunks = formatted.split(/(?<=\n\n)/);
+          chunks.forEach(chunk => {
+            const out = JSON.parse(JSON.stringify(lastData));
+            out.choices[0].delta.content = chunk;
+            res.write(`data: ${JSON.stringify(out)}\n\n`);
+          });
+        }
+        res.write('data: [DONE]\n\n');
+        res.end();
       });
       
       response.data.on('end', () => res.end());
