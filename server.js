@@ -22,34 +22,14 @@ const ENABLE_THINKING_MODE = false; // Set to true to enable chat_template_kwarg
 
 // Model mapping (adjust based on available NIM models)
 const MODEL_MAPPING = {
-  'gpt-3.5-turbo': 'minimaxai/minimax-m2.7-highspeed',
+  'gpt-3.5-turbo': 'nvidia/llama-3.1-nemotron-ultra-253b-v1',
   'gpt-4': 'qwen/qwen3-coder-480b-a35b-instruct',
   'gpt-4-turbo': 'moonshotai/kimi-k2-instruct-0905',
-  'gpt-4o': 'minimaxai/minimax-m2.7',
+  'gpt-4o': 'deepseek-ai/deepseek-v3.1',
   'claude-3-opus': 'openai/gpt-oss-120b',
   'claude-3-sonnet': 'openai/gpt-oss-20b',
-  'gemini-pro': 'openai/gpt-oss-120b'
+  'gemini-pro': 'qwen/qwen3-next-80b-a3b-thinking' 
 };
-
-// Format response into paragraphs
-function formatParagraphs(text) {
-  if (!text) return text;
-  return text
-    // Add break before dialogue
-    .replace(/([.!?…"]) (")/g, '$1\n\n$2')
-    // Add break after dialogue ends
-    .replace(/(["]) ([A-Z])/g, '$1\n\n$2')
-    // Add break before action after long sentence
-    .replace(/([.!?…]{1}) ([A-Z][a-z])/g, (match, p1, p2, offset, str) => {
-      // Only break if the preceding sentence is long enough
-      const preceding = str.lastIndexOf('\n', offset);
-      const segmentLength = offset - preceding;
-      return segmentLength > 120 ? `${p1}\n\n${p2}` : match;
-    })
-    // Clean up excessive blank lines
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -100,28 +80,21 @@ app.post('/v1/chat/completions', async (req, res) => {
       } catch (e) {}
       
       if (!nimModel) {
-        nimModel = 'mistralai/mistral-small-4-119b-2603'; // safe working fallback
+        const modelLower = model.toLowerCase();
+        if (modelLower.includes('gpt-4') || modelLower.includes('claude-opus') || modelLower.includes('405b')) {
+          nimModel = 'meta/llama-3.1-405b-instruct';
+        } else if (modelLower.includes('claude') || modelLower.includes('gemini') || modelLower.includes('70b')) {
+          nimModel = 'meta/llama-3.1-70b-instruct';
+        } else {
+          nimModel = 'meta/llama-3.1-8b-instruct';
+        }
       }
     }
     
     // Transform OpenAI request to NIM format
-    // System prompt injection
-    const SYSTEM_PROMPT = `You're a novelist—focus on a story centered on {{char}}. Serve as narrator and world-shaper. Bring the setting, supporting cast, and events to life while keeping {{user}}'s character autonomous. Show who {{char}} is: their personality, thoughts, motivations, doubts, inner monologue, choices, reactions, and gestures. Show how their mindset and actions shape decisions, influence the plot, and create openings for {{user}}'s input. Narration should reflect {{char}}'s perspective, letting their biases, tone, and emotions color descriptions and guide the story's tension.
-Supporting characters should be distinct. Give them quirks, goals, voices, and flaws. Let their actions generate meaningful consequences for {{char}}. Introduce conflicts—interpersonal, environmental, social, or situational—to maintain momentum. Show how characters adapt, persevere, or grow through challenges, keeping {{char}}'s choices central. Maintain character continuity and include subtle hints or foreshadowing that appear later. Highlight qualities and contradictions, showing moments when fears, desires, or choices clash with values, including hesitation or reflection. Dialogue and actions should follow personality and backstory, with scenes carrying stakes—emotional, social, or physical—and showing growth through choice and consequence.
-Ground each scene in place while shaping atmosphere and tone. Begin each scene with a concise hook that draws the reader in and allows space for {{user}}'s input. End scenes with a clear hook—curiosity, suspense, reflection, or a hint of what's next—that invites {{user}}'s engagement. Include sensory and physical detail to enrich setting and presence. Keep scenes dynamic by alternating dialogue, action, introspection, and description, prioritizing elements that advance openings and collaboration.
-Use a third-person limited perspective anchored in {{char}}. Narration may focus on other characters' observable behavior—gestures, expressions, and speech—while keeping {{char}}'s perspective central. Begin responses with action, reaction, or dialogue tied to {{user}}'s last input. Follow {{user}}'s lead for pacing, adjusting the story speed according to their input. Focus on a few elements at a time to let tension, details, and conflicts unfold naturally. Make scene shifts smooth, connected to prior events, and able to seed subplots. Offer narrative hooks while leaving space for {{user}}'s choices. Keep the narrative immersive and in-character, integrating commentary into the story world.
-Responses should use multiple paragraphs. Blend narration, dialogue, physicality, and thought. Dialogue should feel natural and varied. Maintain novelistic style through sentence rhythm and paragraph flow, emphasizing concise openings and endings that let {{user}} influence the story.
-Adapt seamlessly across genres and tones, maintaining character integrity and advancing the story according to {{user}}'s direction.`;
-
-    // Inject system prompt — prepend to existing system message or add new one
-    const hasSystem = messages[0]?.role === 'system';
-    const injectedMessages = hasSystem
-      ? [{ role: 'system', content: SYSTEM_PROMPT + '\n\n' + messages[0].content }, ...messages.slice(1)]
-      : [{ role: 'system', content: SYSTEM_PROMPT }, ...messages];
-
     const nimRequest = {
       model: nimModel,
-      messages: injectedMessages,
+      messages: messages,
       temperature: temperature || 0.6,
       max_tokens: max_tokens || 9024,
       extra_body: ENABLE_THINKING_MODE ? { chat_template_kwargs: { thinking: true } } : undefined,
@@ -220,8 +193,6 @@ Adapt seamlessly across genres and tones, maintaining character integrity and ad
           if (SHOW_REASONING && choice.message?.reasoning_content) {
             fullContent = '<think>\n' + choice.message.reasoning_content + '\n</think>\n\n' + fullContent;
           }
-
-          fullContent = formatParagraphs(fullContent);
           
           return {
             index: choice.index,
