@@ -37,6 +37,20 @@ const MODEL_MAPPING = {
   'gemma-2' : 'google/gemma-2-2b-it'
 };
 
+function formatParagraphs(text) {
+  if (!text) return text;
+  return text
+    .replace(/([.!?…"]) (")/g, '$1\n\n$2')
+    .replace(/(["]) ([A-Z])/g, '$1\n\n$2')
+    .replace(/([.!?…]{1}) ([A-Z][a-z])/g, (match, p1, p2, offset, str) => {
+      const preceding = str.lastIndexOf('\n', offset);
+      const segmentLength = offset - preceding;
+      return segmentLength > 120 ? `${p1}\n\n${p2}` : match;
+    })
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
@@ -87,13 +101,7 @@ app.post('/v1/chat/completions', async (req, res) => {
       
       if (!nimModel) {
         const modelLower = model.toLowerCase();
-        if (modelLower.includes('gpt-4') || modelLower.includes('claude-opus') || modelLower.includes('405b')) {
-          nimModel = 'meta/llama-3.1-405b-instruct';
-        } else if (modelLower.includes('claude') || modelLower.includes('gemini') || modelLower.includes('70b')) {
-          nimModel = 'meta/llama-3.1-70b-instruct';
-        } else {
-          nimModel = 'meta/llama-3.1-8b-instruct';
-        }
+        nimModel = 'mistralai/mistral-small-4-119b-2603';
       }
     }
     
@@ -181,7 +189,6 @@ app.post('/v1/chat/completions', async (req, res) => {
         res.end();
       });
       
-      response.data.on('end', () => res.end());
       response.data.on('error', (err) => {
         console.error('Stream error:', err);
         res.end();
@@ -195,6 +202,7 @@ app.post('/v1/chat/completions', async (req, res) => {
         model: model,
         choices: response.data.choices.map(choice => {
           let fullContent = choice.message?.content || '';
+          fullContent = formatParagraphs(fullContent);
           
           if (SHOW_REASONING && choice.message?.reasoning_content) {
             fullContent = '<think>\n' + choice.message.reasoning_content + '\n</think>\n\n' + fullContent;
