@@ -260,6 +260,25 @@ async function callWithFallback(baseRequest, models) {
 
 // ─── Routes ────────────────────────────────────────────────────────────────
 
+function formatParagraphs(text) {
+  if (!text) return text;
+  let paragraphs = text.split(/\n{2,}/);
+  paragraphs = paragraphs.map(para => {
+    para = para.trim();
+    if (!para) return null;
+    if (para.length < 300) return para;
+    para = para.replace(/([.!?]) ("[\w])/g, '$1\n\n$2');
+    para = para.replace(/(["]) ([A-Z][a-z]{2,})/g, '$1\n\n$2');
+    para = para.replace(/([.!?]) ([A-Z][a-z])/g, (match, p1, p2, offset, str) => {
+      const preceding = str.lastIndexOf('\n', offset);
+      const segmentLength = offset - (preceding === -1 ? 0 : preceding);
+      return segmentLength > 200 ? `${p1}\n\n${p2}` : match;
+    });
+    return para;
+  });
+  return paragraphs.filter(p => p !== null).join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: '2.1.0' });
 });
@@ -326,14 +345,12 @@ app.post('/v1/chat/completions', async (req, res) => {
         req.removeAllListeners('close');
       };
 
+      let collectedText = '';
+      let lastChunkData = null;
       const processLine = (line) => {
         if (!line.startsWith('data: ')) return;
 
         if (line.includes('[DONE]')) {
-          if (!doneSent) {
-            safeWrite(res, 'data: [DONE]\n\n');
-            doneSent = true;
-          }
           streamEndedCleanly = true;
           return;
         }
@@ -361,9 +378,9 @@ app.post('/v1/chat/completions', async (req, res) => {
 
             delta.content = content;
             delete delta.reasoning_content;
+            if (content) collectedText += content;
+            lastChunkData = data;
           }
-
-          safeWrite(res, `data: ${JSON.stringify(data)}\n\n`);
 
         } catch (parseErr) {
           // FIX: Don't silently swallow—send error to client so they know data was lost
@@ -405,24 +422,30 @@ app.post('/v1/chat/completions', async (req, res) => {
       });
 
       upstreamStream.on('end', () => {
-        buffer += decoder.end();
+  buffer += decoder.end();
+  if (buffer.trim()) {
+    for (const line of buffer.split('\n')) {
+      processLine(line);
+    }
+  }
 
-        if (buffer.trim()) {
-          for (const line of buffer.split('\n')) {
-            processLine(line);
-          }
-        }
+  if (lastChunkData && collectedText) {
+    const formatted = formatParagraphs(collectedText);
+    const chunks = formatted.split(/(?<=\n\n)/);
+    chunks.forEach(chunk => {
+      const out = JSON.parse(JSON.stringify(lastChunkData));
+      out.choices[0].delta.content = chunk;
+      safeWrite(res, `data: ${JSON.stringify(out)}\n\n`);
+    });
+  }
 
-        if (!doneSent) {
-          safeWrite(res, 'data: [DONE]\n\n');
-        }
-
-        streamEndedCleanly = true;
-        if (!res.writableEnded) {
-          res.end();
-        }
-        cleanup();
-      });
+  if (!doneSent) {
+    safeWrite(res, 'data: [DONE]\n\n');
+  }
+  streamEndedCleanly = true;
+  if (!res.writableEnded) res.end();
+  cleanup();
+});
 
       upstreamStream.on('error', err => {
         console.error('[STREAM] Upstream error:', err.message);
@@ -464,6 +487,7 @@ app.post('/v1/chat/completions', async (req, res) => {
         model: model,
         choices: (response.data.choices || []).map((choice, i) => {
           let content = choice.message?.content || '';
+          content = formatParagraphs(content);
 
           if (SHOW_REASONING && choice.message?.reasoning_content) {
             content = `<thinking>\n${choice.message.reasoning_content}\n</thinking>\n\n${content}`;
@@ -541,4 +565,3 @@ app.listen(PORT, () => {
     console.error('[VALIDATION] Startup check failed:', err.message);
   });
 });
-  
