@@ -260,6 +260,43 @@ async function callWithFallback(baseRequest, models) {
 
 // ─── Routes ────────────────────────────────────────────────────────────────
 
+function formatParagraphs(text) {
+  if (!text) return text;
+
+  // If already has paragraph breaks, clean and return
+  if (text.includes('\n\n')) {
+    return text.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  // Split into individual sentences
+  const sentences = text.match(/[^.!?]+[.!?]+["']?\s*/g) || [text];
+  const result = [];
+  let current = '';
+
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i];
+    const next = sentences[i + 1] || '';
+    current += sentence;
+
+    const isDialogue = sentence.includes('"') || sentence.includes('\u201d');
+    const nextIsDialogue = next.includes('"') || next.includes('\u201d');
+    const nextStartsAction = /^(He|She|They|It|The|A |An )[a-z]/.test(next.trim());
+    const currentLong = current.length > 350;
+    const switchingMode = (isDialogue && !nextIsDialogue) || (!isDialogue && nextIsDialogue);
+
+    // Break if switching between dialogue and narration
+    // OR if current paragraph is long enough AND next sentence is a natural break point
+    if (switchingMode || (currentLong && (nextStartsAction || nextIsDialogue))) {
+      result.push(current.trim());
+      current = '';
+    }
+  }
+
+  if (current.trim()) result.push(current.trim());
+
+  return result.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: '2.1.0' });
 });
@@ -326,14 +363,12 @@ app.post('/v1/chat/completions', async (req, res) => {
         req.removeAllListeners('close');
       };
 
+      let collectedText = '';
+      let lastChunkData = null;
       const processLine = (line) => {
         if (!line.startsWith('data: ')) return;
 
         if (line.includes('[DONE]')) {
-          if (!doneSent) {
-            safeWrite(res, 'data: [DONE]\n\n');
-            doneSent = true;
-          }
           streamEndedCleanly = true;
           return;
         }
@@ -361,9 +396,9 @@ app.post('/v1/chat/completions', async (req, res) => {
 
             delta.content = content;
             delete delta.reasoning_content;
+            if (content) collectedText += content;
+            lastChunkData = data;
           }
-
-          safeWrite(res, `data: ${JSON.stringify(data)}\n\n`);
 
         } catch (parseErr) {
           // FIX: Don't silently swallow—send error to client so they know data was lost
@@ -405,24 +440,30 @@ app.post('/v1/chat/completions', async (req, res) => {
       });
 
       upstreamStream.on('end', () => {
-        buffer += decoder.end();
+  buffer += decoder.end();
+  if (buffer.trim()) {
+    for (const line of buffer.split('\n')) {
+      processLine(line);
+    }
+  }
 
-        if (buffer.trim()) {
-          for (const line of buffer.split('\n')) {
-            processLine(line);
-          }
-        }
+  if (lastChunkData && collectedText) {
+    const formatted = formatParagraphs(collectedText);
+    const chunks = formatted.split(/(?<=\n\n)/);
+    chunks.forEach(chunk => {
+      const out = JSON.parse(JSON.stringify(lastChunkData));
+      out.choices[0].delta.content = chunk;
+      safeWrite(res, `data: ${JSON.stringify(out)}\n\n`);
+    });
+  }
 
-        if (!doneSent) {
-          safeWrite(res, 'data: [DONE]\n\n');
-        }
-
-        streamEndedCleanly = true;
-        if (!res.writableEnded) {
-          res.end();
-        }
-        cleanup();
-      });
+  if (!doneSent) {
+    safeWrite(res, 'data: [DONE]\n\n');
+  }
+  streamEndedCleanly = true;
+  if (!res.writableEnded) res.end();
+  cleanup();
+});
 
       upstreamStream.on('error', err => {
         console.error('[STREAM] Upstream error:', err.message);
@@ -464,6 +505,7 @@ app.post('/v1/chat/completions', async (req, res) => {
         model: model,
         choices: (response.data.choices || []).map((choice, i) => {
           let content = choice.message?.content || '';
+          content = formatParagraphs(content);
 
           if (SHOW_REASONING && choice.message?.reasoning_content) {
             content = `<thinking>\n${choice.message.reasoning_content}\n</thinking>\n\n${content}`;
