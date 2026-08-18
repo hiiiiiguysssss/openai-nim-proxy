@@ -281,12 +281,15 @@ function formatParagraphs(text) {
     const isDialogue = sentence.includes('"') || sentence.includes('\u201d');
     const nextIsDialogue = next.includes('"') || next.includes('\u201d');
     const nextStartsAction = /^(He|She|They|It|The|A |An )[a-z]/.test(next.trim());
-    const currentLong = current.length > 350;
+    const currentLong = current.length > 300;
+    const currentVeryLong = current.length > 550;
     const switchingMode = (isDialogue && !nextIsDialogue) || (!isDialogue && nextIsDialogue);
 
-    // Break if switching between dialogue and narration
-    // OR if current paragraph is long enough AND next sentence is a natural break point
-    if (switchingMode || (currentLong && (nextStartsAction || nextIsDialogue))) {
+    if (
+      currentVeryLong || // always break if very long
+      (currentLong && switchingMode) || // break on mode switch if long enough
+      (currentLong && nextStartsAction) // break before new action if long enough
+    ) {
       result.push(current.trim());
       current = '';
     }
