@@ -282,7 +282,7 @@ function formatParagraphs(text) {
 
   for (const sentence of sentences) {
     current += sentence;
-    if (current.length > 400) {
+    if (current.length > 600) {
       result.push(current.trim());
       current = '';
     }
