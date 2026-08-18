@@ -268,8 +268,8 @@ function formatParagraphs(text) {
     return text.replace(/\n{3,}/g, '\n\n').trim();
   }
 
-  // Split into individual sentences
-  const sentences = text.match(/[^.!?]+[.!?]+["']?\s*/g) || [text];
+  // Split into sentences but keep dialogue intact
+  const sentences = text.match(/(?:[^.!?]|\.(?!\s+[A-Z])|[.!?]+["'\u201d])+[.!?]*["'\u201d]?\s*/g) || [text];
   const result = [];
   let current = '';
 
@@ -278,17 +278,19 @@ function formatParagraphs(text) {
     const next = sentences[i + 1] || '';
     current += sentence;
 
-    const isDialogue = sentence.includes('"') || sentence.includes('\u201d');
-    const nextIsDialogue = next.includes('"') || next.includes('\u201d');
+    const isDialogue = /["'\u201c\u201d]/.test(sentence);
+    const nextIsDialogue = /["'\u201c\u201d]/.test(next);
     const nextStartsAction = /^(He|She|They|It|The|A |An )[a-z]/.test(next.trim());
     const currentLong = current.length > 300;
     const currentVeryLong = current.length > 550;
-    const switchingMode = (isDialogue && !nextIsDialogue) || (!isDialogue && nextIsDialogue);
+
+    // Never break in the middle of a dialogue exchange
+    const bothDialogue = isDialogue && nextIsDialogue;
 
     if (
-      currentVeryLong || // always break if very long
-      (currentLong && switchingMode) || // break on mode switch if long enough
-      (currentLong && nextStartsAction) // break before new action if long enough
+      (currentVeryLong && !bothDialogue) ||
+      (currentLong && !nextIsDialogue && nextStartsAction) ||
+      (currentLong && !isDialogue && nextIsDialogue)
     ) {
       result.push(current.trim());
       current = '';
