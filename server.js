@@ -290,19 +290,29 @@ app.post('/v1/chat/completions', async (req, res) => {
     } = req.body;
 
     const primaryModel = MODEL_MAPPING[model] || 'nvidia/llama-3.3-nemotron-super-49b-v1.5';
-    const modelChain = [primaryModel, ...FALLBACK_MODELS];
+const modelChain = [primaryModel, ...FALLBACK_MODELS];
 
-    const baseRequest = {
-      messages,
-      temperature: temperature ?? 0.7,
-      max_tokens: Math.min(max_tokens ?? 2048, MAX_TOKENS_LIMIT),
-      stream: stream || false,
-      extra_body: ENABLE_THINKING_MODE
-        ? { chat_template_kwargs: { thinking: true } }
-        : undefined
-    };
+// Inject formatting reminder into last user message
+const messagesWithReminder = [...messages];
+const lastUserIdx = messagesWithReminder.map(m => m.role).lastIndexOf('user');
+if (lastUserIdx !== -1) {
+  messagesWithReminder[lastUserIdx] = {
+    ...messagesWithReminder[lastUserIdx],
+    content: messagesWithReminder[lastUserIdx].content + '\n\n[Format your response in multiple paragraphs. Separate dialogue, action, and description into distinct paragraphs. Do not write one single block of text.]'
+  };
+}
 
-    const { response, model: usedModel } = await callWithFallback(baseRequest, modelChain);
+const baseRequest = {
+  messages: messagesWithReminder,
+  temperature: temperature ?? 0.7,
+  max_tokens: Math.min(max_tokens ?? 2048, MAX_TOKENS_LIMIT),
+  stream: stream || false,
+  extra_body: ENABLE_THINKING_MODE
+    ? { chat_template_kwargs: { thinking: true } }
+    : undefined
+};
+
+const { response, model: usedModel } = await callWithFallback(baseRequest, modelChain);
     upstreamStream = response.data;
     console.log('[PROXY] Model used:', usedModel);
 
