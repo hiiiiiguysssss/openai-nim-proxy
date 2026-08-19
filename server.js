@@ -47,29 +47,32 @@ validateConfig();
 // ─── Model Mapping ─────────────────────────────────────────────────────────
 
 const MODEL_MAPPING = {
+  // Best quality
+  'best': 'abacusai/dracarys-llama-3.1-70b-instruct',
+  'quality': 'meta/llama-3.3-70b-instruct',
+
   // OpenAI slots
   'gpt-3.5-turbo': 'nvidia/nemotron-3-super-120b-a12b',
-  'gpt-4': 'nvidia/nemotron-3-ultra-550b-a55b',
-  'gpt-3.5': 'meta/llama-3.3-70b-instruct',        // qwen3.5-397b hangs forever
+  'gpt-4': 'abacusai/dracarys-llama-3.1-70b-instruct',
+  'gpt-3.5': 'meta/llama-3.3-70b-instruct',
   'gpt-4-turbo': 'abacusai/dracarys-llama-3.1-70b-instruct',
-  'gpt-4o': 'openai/gpt-oss-120b',
-  'gpt-4-flash': 'deepseek-ai/deepseek-v4-flash',
+  'gpt-4o': 'meta/llama-3.3-70b-instruct',
+  'gpt-4-flash': 'stepfun-ai/step-3.5-flash',
   'gpt-3.5o': 'nvidia/nemotron-mini-4b-instruct',
 
   // Claude slots
-  'claude-3-opus': 'openai/gpt-oss-120b',
-  'claude-3-sonnet': 'openai/gpt-oss-20b',
+  'claude-3-opus': 'abacusai/dracarys-llama-3.1-70b-instruct',
+  'claude-3-sonnet': 'meta/llama-3.3-70b-instruct',
 
   // Gemini slots
   'gemini-pro': 'google/gemma-4-31b-it',
   'gemini-turbo': 'meta/llama-3.3-70b-instruct',
-  'gemini-turbo?': 'abacusai/dracarys-llama-3.1-70b-instruct',
+  'gemini-flash': 'google/gemma-4-27b-it',
 
   // Mistral slots
-  'mistral': 'mistralai/mistral-large-3-675b-instruct-2512',
-  'mistral-turbo': 'openai/gpt-oss-120b',
+  'mistral': 'mistralai/mistral-nemotron',
+  'mistral-turbo': 'meta/llama-3.3-70b-instruct',
   'mistral-pro': 'stepfun-ai/step-3.5-flash',
-  'mistral-nemo': 'mistralai/mistral-nemotron',
   'mistral-fast': 'mistralai/ministral-14b-instruct-2512',
 
   // Google slots
@@ -77,18 +80,20 @@ const MODEL_MAPPING = {
   'google-lighter': 'google/gemma-3n-e4b-it',
   'google-lightest': 'google/gemma-2-2b-it',
 
-  // MiniMax slots
-  'm2.7': 'minimaxai/minimax-m2.7',
-  'm3': 'meta/llama-3.3-70b-instruct',
-
-  // Step slots
+  // Fast slots
+  'fast': 'stepfun-ai/step-3.5-flash',
+  'fast-2': 'stepfun-ai/step-3.7-flash',
   'step-3.5-flash': 'stepfun-ai/step-3.5-flash',
-  'step-3.7-flash': 'stepfun-ai/step-3.7-flash'
+  'step-3.7-flash': 'stepfun-ai/step-3.7-flash',
+
+  // Nemotron slots
+  'nemotron': 'nvidia/llama-3.3-nemotron-super-49b-v1.5',
+  'nemotron-mini': 'nvidia/nemotron-mini-4b-instruct'
 };
 
 const FALLBACK_MODELS = [
-  'openai/gpt-oss-120b',
   'meta/llama-3.3-70b-instruct',
+  'abacusai/dracarys-llama-3.1-70b-instruct',
   'google/gemma-4-31b-it',
   'stepfun-ai/step-3.5-flash'
 ];
