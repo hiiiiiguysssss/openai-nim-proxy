@@ -298,8 +298,7 @@ const lastUserIdx = messagesWithReminder.map(m => m.role).lastIndexOf('user');
 if (lastUserIdx !== -1) {
   messagesWithReminder[lastUserIdx] = {
     ...messagesWithReminder[lastUserIdx],
-    content: messagesWithReminder[lastUserIdx].content + '\n\n[Format your response in multiple paragraphs. Separate dialogue, action, and description into distinct paragraphs. Do not write one single block of text.]'
-  };
+    content: messagesWithReminder[lastUserIdx].content + '\n\n[IMPORTANT FORMATTING RULE: You MUST write in multiple separate paragraphs. NEVER write one continuous block of text. Start a new paragraph every 2-3 sentences. Put a blank line between every paragraph. Dialogue must be in its own paragraph. Actions must be in their own paragraph. Descriptions must be in their own paragraph. This is mandatory.]'  };
 }
 
 const baseRequest = {
