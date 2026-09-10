@@ -47,28 +47,26 @@ validateConfig();
 // ─── Model Mapping ─────────────────────────────────────────────────────────
 
 const MODEL_MAPPING = {
-  // Fast and reliable
-  'gpt-3.5-turbo': 'nvidia/nemotron-3-super-120b-a12b',
-  'gemini-pro':    'nvidia/llama-3.3-nemotron-super-49b-v1.5',
-  'fast':          'stepfun-ai/step-3.5-flash',
-  'fast-2':        'stepfun-ai/step-3.7-flash',
-  'google-light':  'google/gemma-4-31b-it',
-  'google-lighter':'google/gemma-3n-e4b-it',
-  'google-lightest':'google/gemma-2-2b-it',
-  'nemotron-mini': 'nvidia/nemotron-mini-4b-instruct',
-
-  // Bigger models (may be slow or intermittent)
-  'gpt-4':         'nvidia/nemotron-3-ultra-550b-a55b',
-  'gpt-4o':        'minimaxai/minimax-m3',
-  'gpt-4-flash':   'deepseek-ai/deepseek-v4-flash',
-  'glm':           'z-ai/glm-5.2',
+  // Most popular/reliable
+  'best':        'nvidia/nemotron-3-ultra-550b-a55b',    // 52M calls, very popular
+  'fast':        'deepseek-ai/deepseek-v4-flash-0731',   // new flash model
+  'quality':     'deepseek-ai/deepseek-v4-pro-0813',     // new pro model
+  'kimi':        'moonshotai/kimi-k3',                   // newest Kimi
+  'gemma':       'google/diffusiongemma-26b-a4b-it',     // 4M calls
+  'nemotron':    'nvidia/nemotron-3.5-lightning-30b-a3b', // fast lightning model
+  'gpt-4':       'nvidia/nemotron-3-ultra-550b-a55b',
+  'gpt-4o':      'deepseek-ai/deepseek-v4-pro-0813',
+  'gpt-4-flash': 'deepseek-ai/deepseek-v4-flash-0731',
+  'gpt-3.5':     'nvidia/nemotron-3.5-lightning-30b-a3b',
+  'claude':      'moonshotai/kimi-k3',
+  'm3':          'minimaxai/minimax-m3',                 // deprecated but still listed
 };
 
 const FALLBACK_MODELS = [
-  'nvidia/llama-3.3-nemotron-super-49b-v1.5',
-  'google/gemma-4-31b-it',
-  'stepfun-ai/step-3.5-flash',
-  'nvidia/nemotron-3-super-120b-a12b'
+  'nvidia/nemotron-3-ultra-550b-a55b',
+  'nvidia/nemotron-3.5-lightning-30b-a3b',
+  'deepseek-ai/deepseek-v4-flash-0731',
+  'google/diffusiongemma-26b-a4b-it'
 ];
 
 // ─── Middleware ─────────────────────────────────────────────────────────────
