@@ -47,26 +47,44 @@ validateConfig();
 // ─── Model Mapping ─────────────────────────────────────────────────────────
 
 const MODEL_MAPPING = {
-  // Most popular/reliable
-  'best':        'nvidia/nemotron-3-ultra-550b-a55b',    // 52M calls, very popular
-  'fast':        'deepseek-ai/deepseek-v4-flash-0731',   // new flash model
-  'quality':     'deepseek-ai/deepseek-v4-pro-0813',     // new pro model
-  'kimi':        'moonshotai/kimi-k3',                   // newest Kimi
-  'gemma':       'google/diffusiongemma-26b-a4b-it',     // 4M calls
-  'nemotron':    'nvidia/nemotron-3.5-lightning-30b-a3b', // fast lightning model
-  'gpt-4':       'nvidia/nemotron-3-ultra-550b-a55b',
-  'gpt-4o':      'deepseek-ai/deepseek-v4-pro-0813',
-  'gpt-4-flash': 'deepseek-ai/deepseek-v4-flash-0731',
-  'gpt-3.5':     'nvidia/nemotron-3.5-lightning-30b-a3b',
-  'claude':      'moonshotai/kimi-k3',
-  'm3':          'minimaxai/minimax-m3',                 // deprecated but still listed
+  // ── Best for RP ──────────────────────────────────────────────
+  'best':          'deepseek-ai/deepseek-v4.1-flash',       // newest! 552B MoE, 8B active, fast
+  'quality':       'nvidia/nemotron-3-ultra-550b-a55b',      // 52M calls, very popular
+  'fast':          'nvidia/nemotron-3.5-lightning-30b-a3b',  // fastest model on NIM right now
+  'glm':           'z-ai/glm-5-3',                          // 753B, brand new
+  'glm-flash':     'z-ai/glm-5-3-flash',                    // 320B/18B active, fast GLM
+  'kimi':          'moonshotai/kimi-k3',                     // 2.8T MoE, multimodal
+  'gemma':         'google/gemma-4-31b-it',                  // confirmed working
+  'gemma-diffusion':'google/diffusiongemma-26b-a4b-it',      // parallel token generation, fast
+  'glimmer':       'meta/muse-glimmer-30b',                  // multimodal reasoning
+  'gpt-oss-20b':   'openai/gpt-oss-20b',                    // confirmed working
+
+  // ── OpenAI slots ────────────────────────────────────────────
+  'gpt-3.5-turbo': 'nvidia/nemotron-3-super-120b-a12b',
+  'gpt-4':         'nvidia/nemotron-3-ultra-550b-a55b',
+  'gpt-4o':        'deepseek-ai/deepseek-v4.1-flash',
+  'gpt-4-turbo':   'moonshotai/kimi-k3',
+  'gpt-4-flash':   'nvidia/nemotron-3.5-lightning-30b-a3b',
+  'gpt-3.5':       'z-ai/glm-5-3-flash',
+
+  // ── Claude slots ────────────────────────────────────────────
+  'claude-3-opus':   'z-ai/glm-5-3',
+  'claude-3-sonnet': 'openai/gpt-oss-20b',
+
+  // ── Gemini slots ────────────────────────────────────────────
+  'gemini-pro':   'google/gemma-4-31b-it',
+  'gemini-flash': 'google/diffusiongemma-26b-a4b-it',
+
+  // ── Vision slots ────────────────────────────────────────────
+  'vision':       'meta/llama-3.2-90b-vision-instruct',
+  'vision-fast':  'meta/llama-3.2-11b-vision-instruct',
 };
 
 const FALLBACK_MODELS = [
   'nvidia/nemotron-3-ultra-550b-a55b',
   'nvidia/nemotron-3.5-lightning-30b-a3b',
-  'deepseek-ai/deepseek-v4-flash-0731',
-  'google/diffusiongemma-26b-a4b-it'
+  'google/gemma-4-31b-it',
+  'openai/gpt-oss-20b'
 ];
 
 // ─── Middleware ─────────────────────────────────────────────────────────────
