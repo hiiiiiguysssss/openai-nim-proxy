@@ -49,7 +49,6 @@ validateConfig();
 const MODEL_MAPPING = {
   'gpt-4':         'nvidia/nemotron-3.5-super-vl-120b-a12b',  // instead of ultra-550b (times out)
   'glm':           'meta/muse-glimmer-30b',                    // instead of glm-5-3-flash (not in catalog)
-  'gpt-4':         'nvidia/nemotron-3-ultra-550b-a55b',
   'gpt-4-flash':   'nvidia/nemotron-3.5-lightning-30b-a3b',
   'gpt-3.5-turbo': 'nvidia/nemotron-3-super-120b-a12b',
   'gpt-3.5':       'nvidia/nemotron-3.5-super-vl-120b-a12b',
