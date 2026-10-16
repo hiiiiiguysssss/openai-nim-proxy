@@ -48,27 +48,25 @@ validateConfig();
 
 const MODEL_MAPPING = {
   // ── Best for RP ──────────────────────────────────────────────
-  'best':          'deepseek-ai/deepseek-v4.1-flash',       // newest! 552B MoE, 8B active, fast
-  'quality':       'nvidia/nemotron-3-ultra-550b-a55b',      // 52M calls, very popular
-  'fast':          'nvidia/nemotron-3.5-lightning-30b-a3b',  // fastest model on NIM right now
-  'glm':           'z-ai/glm-5-3',                          // 753B, brand new
-  'glm-flash':     'z-ai/glm-5-3-flash',                    // 320B/18B active, fast GLM
-  'kimi':          'moonshotai/kimi-k3',                     // 2.8T MoE, multimodal
-  'gemma':         'google/gemma-4-31b-it',                  // confirmed working
-  'gemma-diffusion':'google/diffusiongemma-26b-a4b-it',      // parallel token generation, fast
-  'glimmer':       'meta/muse-glimmer-30b',                  // multimodal reasoning
-  'gpt-oss-20b':   'openai/gpt-oss-20b',                    // confirmed working
+  'best':          'deepseek-ai/deepseek-v4.1-flash',
+  'quality':       'nvidia/nemotron-3-ultra-550b-a55b',
+  'fast':          'nvidia/nemotron-3.5-lightning-30b-a3b',
+  'glm':           'z-ai/glm-5-3-flash',
+  'gemma':         'google/gemma-4-31b-it',
+  'gemma-fast':    'google/diffusiongemma-26b-a4b-it',
+  'glimmer':       'meta/muse-glimmer-30b',
+  'step':          'stepfun-ai/step-5-preview',
+  'gpt-oss':       'openai/gpt-oss-20b',
 
   // ── OpenAI slots ────────────────────────────────────────────
   'gpt-3.5-turbo': 'nvidia/nemotron-3-super-120b-a12b',
   'gpt-4':         'nvidia/nemotron-3-ultra-550b-a55b',
   'gpt-4o':        'deepseek-ai/deepseek-v4.1-flash',
-  'gpt-4-turbo':   'moonshotai/kimi-k3',
   'gpt-4-flash':   'nvidia/nemotron-3.5-lightning-30b-a3b',
   'gpt-3.5':       'z-ai/glm-5-3-flash',
 
   // ── Claude slots ────────────────────────────────────────────
-  'claude-3-opus':   'z-ai/glm-5-3',
+  'claude-3-opus':   'nvidia/nemotron-3-ultra-550b-a55b',
   'claude-3-sonnet': 'openai/gpt-oss-20b',
 
   // ── Gemini slots ────────────────────────────────────────────
@@ -76,8 +74,12 @@ const MODEL_MAPPING = {
   'gemini-flash': 'google/diffusiongemma-26b-a4b-it',
 
   // ── Vision slots ────────────────────────────────────────────
-  'vision':       'meta/llama-3.2-90b-vision-instruct',
-  'vision-fast':  'meta/llama-3.2-11b-vision-instruct',
+  'vision':      'meta/llama-3.2-90b-vision-instruct',
+  'vision-fast': 'meta/llama-3.2-11b-vision-instruct',
+
+  // ── Reasoning ───────────────────────────────────────────────
+  'reasoning':   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning',
+  'super-vl':    'nvidia/nemotron-3.5-super-vl-120b-a12b',
 };
 
 const FALLBACK_MODELS = [
