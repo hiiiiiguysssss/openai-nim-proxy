@@ -277,7 +277,7 @@ app.post('/v1/chat/completions', async (req, res) => {
       stream
     } = req.body;
 
-    const primaryModel = MODEL_MAPPING[model] || 'nvidia/llama-3.3-nemotron-super-49b-v1.5';
+    const primaryModel = MODEL_MAPPING[model] || 'nvidia/nemotron-3.5-lightning-30b-a3b';
 const modelChain = [primaryModel, ...FALLBACK_MODELS];
 
 // Inject formatting reminder into last user message
