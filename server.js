@@ -47,13 +47,13 @@ validateConfig();
 // ─── Model Mapping ─────────────────────────────────────────────────────────
 
 const MODEL_MAPPING = {
-  'gpt-4o':        'deepseek-ai/deepseek-v4.1-flash',
+  'gpt-4':         'nvidia/nemotron-3.5-super-vl-120b-a12b',  // instead of ultra-550b (times out)
+  'glm':           'meta/muse-glimmer-30b',                    // instead of glm-5-3-flash (not in catalog)
   'gpt-4':         'nvidia/nemotron-3-ultra-550b-a55b',
   'gpt-4-flash':   'nvidia/nemotron-3.5-lightning-30b-a3b',
   'gpt-3.5-turbo': 'nvidia/nemotron-3-super-120b-a12b',
   'gpt-3.5':       'nvidia/nemotron-3.5-super-vl-120b-a12b',
   'step':          'stepfun-ai/step-5-preview',
-  'glm':           'z-ai/glm-5-3-flash',
   'gemma':         'google/gemma-4-31b-it',
   'gemma-fast':    'google/diffusiongemma-26b-a4b-it',
   'glimmer':       'meta/muse-glimmer-30b',
